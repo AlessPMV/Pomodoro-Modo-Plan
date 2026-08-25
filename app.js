@@ -4,13 +4,28 @@
   const RING_RADIUS = 108;
   const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
+  const EMOJI_PATTERN = /[\p{Extended_Pictographic}\u{FE0F}\u{200D}]/gu;
+
+  const MODE_EMOJI = {
+    work: '🔥',
+    short: '☕',
+    long: '🏖️',
+  };
+
+  const FALLBACK_ACCENT_DEEP = '#dc2626';
+
   const dom = {};
   let snapshot = null;
-  let previousMode = null;
+  let previousPhaseKey = null;
   let lastStatusKey = null;
+
+  function stripEmojis(text) {
+    return text.replace(EMOJI_PATTERN, '').replace(/\s+/g, ' ').trim();
+  }
 
   function cacheDom() {
     dom.app = document.getElementById('app');
+    dom.methodTabs = Array.from(document.querySelectorAll('.method-tab'));
     dom.modeTabs = Array.from(document.querySelectorAll('.mode-tab'));
     dom.ringProgress = document.getElementById('ring-progress');
     dom.timeDisplay = document.getElementById('time-display');
@@ -37,45 +52,66 @@
     return `mode${mode.charAt(0).toUpperCase()}${mode.slice(1)}`;
   }
 
-  function getAccentColor(mode) {
-    return getComputedStyle(document.documentElement).getPropertyValue(`--accent-${mode}`).trim();
+  function getAccentDeepColor(mode) {
+    return getComputedStyle(document.documentElement)
+      .getPropertyValue(`--accent-deep-${mode}`)
+      .trim();
+  }
+
+  function phaseKeyOf(state) {
+    return `${state.methodKey}:${state.mode}`;
   }
 
   function render(nextSnapshot) {
     snapshot = nextSnapshot;
 
-    if (snapshot.mode !== previousMode) {
-      previousMode = snapshot.mode;
-      const accent = getAccentColor(snapshot.mode);
-      if (accent) {
-        PomodoroNotify.paintFavicon(accent);
-      }
+    const phaseKey = phaseKeyOf(snapshot);
+    if (phaseKey !== previousPhaseKey) {
+      previousPhaseKey = phaseKey;
+      const accentDeep = getAccentDeepColor(snapshot.mode) || FALLBACK_ACCENT_DEEP;
+      PomodoroNotify.paintFavicon(MODE_EMOJI[snapshot.mode], accentDeep);
     }
 
     dom.app.dataset.mode = snapshot.mode;
     document.body.dataset.mode = snapshot.mode;
 
-    const elapsedFraction = snapshot.total > 0 ? (snapshot.total - snapshot.timeLeft) / snapshot.total : 0;
+    const elapsedFraction =
+      snapshot.total > 0 ? (snapshot.total - snapshot.timeLeft) / snapshot.total : 0;
     dom.ringProgress.style.strokeDasharray = String(RING_CIRCUMFERENCE);
     dom.ringProgress.style.strokeDashoffset = String(RING_CIRCUMFERENCE * (1 - elapsedFraction));
 
-    dom.timeDisplay.textContent = formatClock(snapshot.timeLeft);
-    dom.timeDisplay.setAttribute('aria-label', `${formatClock(snapshot.timeLeft)} — ${PomodoroI18n.t(modeLabelKey(snapshot.mode))}`);
+    const clockText = formatClock(snapshot.timeLeft);
+    dom.timeDisplay.textContent = clockText;
+    dom.timeDisplay.setAttribute(
+      'aria-label',
+      `${clockText} — ${stripEmojis(PomodoroI18n.t(modeLabelKey(snapshot.mode)))}`
+    );
 
     dom.modeLabel.textContent = PomodoroI18n.t(modeLabelKey(snapshot.mode));
     dom.startPauseLabel.textContent = PomodoroI18n.t(snapshot.isRunning ? 'pause' : 'start');
 
-    renderTabs(snapshot.mode);
+    renderMethodTabs(snapshot.methodKey);
+    renderModeTabs(snapshot.mode);
     renderSessionPanel(snapshot);
     updateDocumentTitle(snapshot);
     updateNotificationButton();
   }
 
-  function renderTabs(activeMode) {
+  function renderMethodTabs(activeMethodKey) {
+    dom.methodTabs.forEach((tab) => {
+      const isActive = tab.dataset.method === activeMethodKey;
+      tab.classList.toggle('is-active', isActive);
+      tab.setAttribute('aria-pressed', String(isActive));
+      tab.setAttribute('aria-label', stripEmojis(tab.textContent));
+    });
+  }
+
+  function renderModeTabs(activeMode) {
     dom.modeTabs.forEach((tab) => {
       const isActive = tab.dataset.mode === activeMode;
       tab.classList.toggle('is-active', isActive);
       tab.setAttribute('aria-pressed', String(isActive));
+      tab.setAttribute('aria-label', stripEmojis(tab.textContent));
     });
   }
 
@@ -89,7 +125,9 @@
     dom.pomodoroCount.textContent = String(state.completedPomodoros);
 
     dom.cycleDots.forEach((dot, index) => {
-      dot.classList.toggle('is-filled', index < filledDots);
+      const isRelevant = index < perSuperCycle;
+      dot.hidden = !isRelevant;
+      dot.classList.toggle('is-filled', isRelevant && index < filledDots);
     });
 
     dom.cycleDotsWrapper.setAttribute(
@@ -101,7 +139,12 @@
 
   function updateDocumentTitle(state) {
     if (state.isRunning) {
-      PomodoroNotify.setTitle(`${formatClock(state.timeLeft)} · ${PomodoroI18n.t(modeLabelKey(state.mode))}`);
+      PomodoroNotify.setTitle(
+        PomodoroI18n.t('titleRunning', {
+          time: formatClock(state.timeLeft),
+          mode: PomodoroI18n.t(modeLabelKey(state.mode)),
+        })
+      );
     } else {
       PomodoroNotify.resetTitle(PomodoroI18n.t('titleDefault'));
     }
@@ -147,7 +190,7 @@
       PomodoroState.registerCompletedPomodoro();
       PomodoroAudio.playWorkComplete();
 
-      const shouldTakeLongBreak = snapshot.completedPomodoros % PomodoroState.LONG_BREAK_EVERY === 0;
+      const shouldTakeLongBreak = snapshot.completedPomodoros % snapshot.longBreakEvery === 0;
       const nextMode = shouldTakeLongBreak ? 'long' : 'short';
 
       PomodoroState.setMode(nextMode);
@@ -176,6 +219,16 @@
   }
 
   function bindEvents() {
+    dom.methodTabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        if (!snapshot || snapshot.methodKey === tab.dataset.method) {
+          return;
+        }
+        PomodoroTimer.reset();
+        PomodoroState.setMethod(tab.dataset.method);
+      });
+    });
+
     dom.modeTabs.forEach((tab) => {
       tab.addEventListener('click', () => {
         if (!snapshot || snapshot.mode === tab.dataset.mode) {

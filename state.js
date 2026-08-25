@@ -10,46 +10,97 @@ const PomodoroEvents = {
 };
 
 const PomodoroState = (() => {
-  const STORAGE_KEY_COUNT = 'pomodoro.completed-count';
+  const STORAGE_KEY_METHOD = 'pomodoro.method';
+  const STORAGE_KEY_COUNTS = 'pomodoro.completed-by-method';
+  const LEGACY_STORAGE_KEY_COUNT = 'pomodoro.completed-count';
+  const DEFAULT_METHOD_KEY = 'classic';
 
-  const MODE_DURATIONS = {
-    work: 25 * 60,
-    short: 5 * 60,
-    long: 15 * 60,
+  const METHODS = {
+    classic: {
+      durations: { work: 25 * 60, short: 5 * 60, long: 15 * 60 },
+      longBreakEvery: 4,
+    },
+    deep50: {
+      durations: { work: 50 * 60, short: 10 * 60, long: 30 * 60 },
+      longBreakEvery: 2,
+    },
+    rule5217: {
+      durations: { work: 52 * 60, short: 17 * 60, long: 25 * 60 },
+      longBreakEvery: 2,
+    },
+    ultradian: {
+      durations: { work: 90 * 60, short: 20 * 60, long: 20 * 60 },
+      longBreakEvery: 2,
+    },
   };
 
-  const LONG_BREAK_EVERY = 4;
-
+  let methodKey = loadStoredMethod();
   let mode = 'work';
-  let timeLeft = MODE_DURATIONS.work;
+  let timeLeft = METHODS[methodKey].durations.work;
   let isRunning = false;
-  let completedPomodoros = readStoredCount();
+  let completedByMethod = loadStoredCounts();
 
   const subscribers = new Set();
 
-  function readStoredCount() {
+  function loadStoredMethod() {
     try {
-      const value = Number(window.localStorage.getItem(STORAGE_KEY_COUNT));
-      return Number.isInteger(value) && value >= 0 ? value : 0;
-    } catch {
-      return 0;
-    }
+      const stored = window.localStorage.getItem(STORAGE_KEY_METHOD);
+      if (stored && stored in METHODS) {
+        return stored;
+      }
+    } catch {}
+    return DEFAULT_METHOD_KEY;
   }
 
-  function persistCount() {
+  function buildEmptyCounts() {
+    return Object.fromEntries(Object.keys(METHODS).map((key) => [key, 0]));
+  }
+
+  function loadStoredCounts() {
+    const counts = buildEmptyCounts();
     try {
-      window.localStorage.setItem(STORAGE_KEY_COUNT, String(completedPomodoros));
+      const raw = window.localStorage.getItem(STORAGE_KEY_COUNTS);
+      if (raw) {
+        const parsed = JSON.parse(raw) || {};
+        Object.keys(counts).forEach((key) => {
+          const value = Number(parsed[key]);
+          if (Number.isInteger(value) && value >= 0) {
+            counts[key] = value;
+          }
+        });
+      } else {
+        const legacy = Number(window.localStorage.getItem(LEGACY_STORAGE_KEY_COUNT));
+        if (Number.isInteger(legacy) && legacy >= 0) {
+          counts[DEFAULT_METHOD_KEY] = legacy;
+        }
+      }
+    } catch {}
+    return counts;
+  }
+
+  function persistMethod() {
+    try {
+      window.localStorage.setItem(STORAGE_KEY_METHOD, methodKey);
+    } catch {}
+  }
+
+  function persistCounts() {
+    try {
+      window.localStorage.setItem(STORAGE_KEY_COUNTS, JSON.stringify(completedByMethod));
     } catch {}
   }
 
   function getSnapshot() {
+    const method = METHODS[methodKey];
     return {
+      methodKey,
+      method,
       mode,
       timeLeft,
-      total: MODE_DURATIONS[mode],
+      total: method.durations[mode],
       isRunning,
-      completedPomodoros,
-      longBreakEvery: LONG_BREAK_EVERY,
+      completedPomodoros: completedByMethod[methodKey],
+      longBreakEvery: method.longBreakEvery,
     };
   }
 
@@ -83,28 +134,40 @@ const PomodoroState = (() => {
   }
 
   function setMode(nextMode) {
-    if (!(nextMode in MODE_DURATIONS)) {
+    const durations = METHODS[methodKey].durations;
+    if (!(nextMode in durations)) {
       return;
     }
     mode = nextMode;
-    timeLeft = MODE_DURATIONS[nextMode];
+    timeLeft = durations[nextMode];
     publish();
   }
 
   function resetCurrentMode() {
-    timeLeft = MODE_DURATIONS[mode];
+    timeLeft = METHODS[methodKey].durations[mode];
+    publish();
+  }
+
+  function setMethod(nextMethodKey) {
+    if (!(nextMethodKey in METHODS) || nextMethodKey === methodKey) {
+      return;
+    }
+    methodKey = nextMethodKey;
+    persistMethod();
+    mode = 'work';
+    timeLeft = METHODS[methodKey].durations.work;
     publish();
   }
 
   function registerCompletedPomodoro() {
-    completedPomodoros += 1;
-    persistCount();
+    completedByMethod[methodKey] += 1;
+    persistCounts();
     publish();
   }
 
   return {
-    MODE_DURATIONS,
-    LONG_BREAK_EVERY,
+    METHODS,
+    DEFAULT_METHOD_KEY,
     subscribe,
     getSnapshot,
     getTimeLeft,
@@ -112,6 +175,7 @@ const PomodoroState = (() => {
     setTimeLeft,
     setRunning,
     setMode,
+    setMethod,
     resetCurrentMode,
     registerCompletedPomodoro,
   };
