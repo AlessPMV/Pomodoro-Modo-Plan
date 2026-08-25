@@ -6,12 +6,21 @@ Temporizador web basado en la **técnica Pomodoro**, desarrollado exclusivamente
 
 ## Características
 
-- ⏱️ Ciclos de **Trabajo (25 min)**, **Descanso corto (5 min)** y **Descanso largo (15 min)** tras cada 4 pomodoros.
+- ⏱️ **4 métodos de temporización** seleccionables:
+
+  | Método | Trabajo | Corto | Largo | Largo cada |
+  |---|---|---|---|---|
+  | 🍅 Clásico | 25 min | 5 min | 15 min | 4 ciclos |
+  | ⚡ Prolongado | 50 min | 10 min | 30 min | 2 ciclos |
+  | ⏳ Regla 52/17 | 52 min | 17 min | 25 min | 2 ciclos |
+  | 🧠 Ultradiano | 90 min | 20 min | 20 min | 2 ciclos |
+
 - ▶️ Controles de **Iniciar / Pausar / Reiniciar**.
 - 🔔 Notificaciones al finalizar cada ciclo:
   - Sonora con la **Web Audio API** (beeps sintetizados, sin archivos externos).
-  - Visual: cambio de tema por modo, título de pestaña en vivo (`12:34 · Trabajo`), favicon dinámico y notificaciones del navegador opcionales.
-- 🍅 Contador de pomodoros completados **persistente** (`localStorage`) con indicador de progreso hacia el descanso largo.
+  - Visual: cambio de tema por modo, título de pestaña en vivo (`⏰ 12:34 · 🔥 Trabajo`), favicon dinámico con emojis y notificaciones del navegador opcionales.
+- 📊 Contador de pomodoros **independiente por método** y persistente (`localStorage`), con migración automática del contador antiguo e indicador de progreso hacia el descanso largo.
+- 😀 Emojis integrados en toda la interfaz (se filtran de los `aria-label` para una lectura limpia por lectores de pantalla).
 - 🌐 Interfaz bilingüe **Español / English** conmutable en caliente.
 - 📱 Diseño responsive *mobile-first*, accesible (semántica HTML5, ARIA, `prefers-reduced-motion`, contraste AA).
 
@@ -62,3 +71,9 @@ Registro de los prompts utilizados durante el desarrollo. Los próximos prompts 
 > Además agrega este y los próximos prompts que te diga en el readme y crea un archivo llamado PLAN.md donde almacenes el plan de arquitectura.
 
 **Aclaraciones acordadas:** interfaz bilingüe (ES por defecto), contador persistente con `localStorage` (sobrevive recargas) y descanso largo incluido cada 4 pomodoros.
+
+### Prompt 2 — Métodos adicionales y emojis (2026-08-25)
+
+> Ahora igualmente quiero que le agregues los otros métdodos de pomodoro y que tenga emojis
+
+**Aclaraciones acordadas:** cuatro métodos seleccionables (Clásico · Prolongado · Regla 52/17 · Ultradiano), emojis en toda la interfaz (limpios para lectores de pantalla) y contador de pomodoros independiente por método.

@@ -139,6 +139,45 @@ body {
   cursor: not-allowed;
 }
 
+.method-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: clamp(16px, 4vw, 20px);
+}
+
+.method-tab {
+  appearance: none;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: rgba(148, 163, 184, 0.1);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.4rem 0.75rem;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.method-tab:hover {
+  color: var(--text-strong);
+  border-color: var(--border);
+}
+
+.method-tab.is-active {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+@supports (background: color-mix(in srgb, red 50%, blue)) {
+  .method-tab.is-active {
+    background: color-mix(in srgb, var(--accent) 16%, transparent);
+  }
+}
+
 .mode-tabs {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -351,6 +390,7 @@ body {
 }
 
 @media (max-width: 360px) {
+  .method-tab,
   .mode-tab {
     font-size: 0.72rem;
   }

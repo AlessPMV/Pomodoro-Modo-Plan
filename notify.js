@@ -82,7 +82,10 @@ const PomodoroNotify = (() => {
     return faviconLink;
   }
 
-  function paintFavicon(color) {
+  const FAVICON_FONT =
+    '40px system-ui, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
+
+  function paintFavicon(emoji, background) {
     const canvas = document.createElement('canvas');
     canvas.width = FAVICON_SIZE;
     canvas.height = FAVICON_SIZE;
@@ -91,10 +94,21 @@ const PomodoroNotify = (() => {
       return;
     }
     context.clearRect(0, 0, FAVICON_SIZE, FAVICON_SIZE);
-    context.fillStyle = color;
-    context.beginPath();
-    context.arc(FAVICON_SIZE / 2, FAVICON_SIZE / 2, FAVICON_SIZE / 2 - 6, 0, Math.PI * 2);
-    context.fill();
+
+    if (background) {
+      context.fillStyle = background;
+      context.beginPath();
+      context.arc(FAVICON_SIZE / 2, FAVICON_SIZE / 2, FAVICON_SIZE / 2 - 4, 0, Math.PI * 2);
+      context.fill();
+    }
+
+    if (emoji) {
+      context.font = FAVICON_FONT;
+      context.textAlign = 'center';
+      context.textBaseline = 'middle';
+      context.fillText(emoji, FAVICON_SIZE / 2, FAVICON_SIZE / 2 + 2);
+    }
+
     ensureFaviconLink().href = canvas.toDataURL('image/png');
   }
 

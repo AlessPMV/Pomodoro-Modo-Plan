@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Temporizador Pomodoro construido con HTML5, CSS3 y JavaScript Vanilla.">
+  <meta name="description" content="Temporizador Pomodoro con múltiples métodos, construido con HTML5, CSS3 y JavaScript Vanilla.">
   <meta name="color-scheme" content="dark">
-  <title>Pomodoro</title>
+  <title>🍅 Pomodoro</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="css/styles.css">
 </head>
@@ -14,7 +14,7 @@
   <div class="app" id="app" data-mode="work">
 
     <header class="app-header">
-      <h1 class="app-title">Pomodoro</h1>
+      <h1 class="app-title" data-i18n="appTitle">🍅 Pomodoro</h1>
       <div class="header-actions">
         <button type="button" id="btn-lang" class="ghost-btn" data-i18n="langButton" data-i18n-aria="langAria">English</button>
         <button type="button" id="btn-notifications" class="ghost-btn icon-btn" aria-pressed="false" aria-label="Activar notificaciones del navegador">
@@ -26,10 +26,17 @@
       </div>
     </header>
 
-    <nav class="mode-tabs" aria-label="Seleccionar modo del temporizador" data-i18n-aria="tabsAria">
-      <button type="button" class="mode-tab is-active" data-mode="work" aria-pressed="true" data-i18n="modeWork">Trabajo</button>
-      <button type="button" class="mode-tab" data-mode="short" aria-pressed="false" data-i18n="modeShort">Descanso corto</button>
-      <button type="button" class="mode-tab" data-mode="long" aria-pressed="false" data-i18n="modeLong">Descanso largo</button>
+    <nav class="method-tabs" aria-label="Seleccionar método de temporización" data-i18n-aria="methodsAria">
+      <button type="button" class="method-tab is-active" data-method="classic" aria-pressed="true" data-i18n="methodClassic">🍅 Clásico</button>
+      <button type="button" class="method-tab" data-method="deep50" aria-pressed="false" data-i18n="methodDeep50">⚡ Prolongado</button>
+      <button type="button" class="method-tab" data-method="rule5217" aria-pressed="false" data-i18n="methodRule5217">⏳ Regla 52/17</button>
+      <button type="button" class="method-tab" data-method="ultradian" aria-pressed="false" data-i18n="methodUltradian">🧠 Ultradiano</button>
+    </nav>
+
+    <nav class="mode-tabs" aria-label="Seleccionar fase del método" data-i18n-aria="tabsAria">
+      <button type="button" class="mode-tab is-active" data-mode="work" aria-pressed="true" data-i18n="modeWork">🔥 Trabajo</button>
+      <button type="button" class="mode-tab" data-mode="short" aria-pressed="false" data-i18n="modeShort">☕ Descanso corto</button>
+      <button type="button" class="mode-tab" data-mode="long" aria-pressed="false" data-i18n="modeLong">🏖️ Descanso largo</button>
     </nav>
 
     <section class="timer-panel" aria-labelledby="mode-label">
@@ -40,14 +47,14 @@
         </svg>
         <div id="time-display" class="time-display" role="timer">25:00</div>
       </div>
-      <p id="mode-label" class="mode-label" data-i18n="modeWork">Trabajo</p>
+      <p id="mode-label" class="mode-label" data-i18n="modeWork">🔥 Trabajo</p>
     </section>
 
     <div class="controls">
       <button type="button" id="btn-start-pause" class="primary-btn">
-        <span class="btn-label" data-i18n="start">Iniciar</span>
+        <span class="btn-label" data-i18n="start">▶️ Iniciar</span>
       </button>
-      <button type="button" id="btn-reset" class="secondary-btn" data-i18n="reset">Reiniciar</button>
+      <button type="button" id="btn-reset" class="secondary-btn" data-i18n="reset">🔄 Reiniciar</button>
     </div>
 
     <section class="session-panel" aria-label="Progreso de la sesión">
@@ -59,9 +66,9 @@
       </p>
       <p class="counter-line">
         <span id="pomodoro-count" class="counter-value">0</span>
-        <span data-i18n="completedLabel">pomodoros completados</span>
+        <span data-i18n="completedLabel">🍅 pomodoros completados</span>
       </p>
-      <p id="long-break-hint" class="hint">Descanso largo cada 4 pomodoros</p>
+      <p id="long-break-hint" class="hint">🛋️ Descanso largo cada 4 pomodoros</p>
     </section>
 
   </div>
@@ -69,7 +76,7 @@
   <p id="status-region" class="visually-hidden" role="status" aria-live="assertive"></p>
 
   <footer class="app-footer">
-    <p data-i18n="madeWith">Hecho con HTML5, CSS3 y JavaScript Vanilla</p>
+    <p data-i18n="madeWith">🛠️ Hecho con HTML5, CSS3 y JavaScript Vanilla</p>
   </footer>
 
   <script src="js/state.js"></script>
